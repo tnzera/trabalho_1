@@ -31,6 +31,9 @@ servidor.get( '/' , (req, res, next) => {
     res.send('Bem-vindo(a) `a API Loja!');
 });
 
+
+//produtos
+//metodos get
 servidor.get( '/produtos' , (req, res, next) => {
     knex('produtos').then( (dados) =>{
         res.send( dados );
@@ -51,6 +54,47 @@ servidor.get( '/produtos/:idProd' , (req, res, next) => {
         }, next) ; 
 });
 
+//metodo post
+servidor.post( '/produtos' , (req, res, next) => {
+    knex('produtos')
+        .insert( req.body )
+        .then( (dados) =>{
+            res.send( dados );
+        }, next) ; 
+});
+
+//metodo put
+servidor.put( '/produtos/:idProd' , (req, res, next) => {
+    const idProduto = req.params.idProd;
+    knex('produtos')
+        .where( 'id' , idProduto)
+        .update( req.body )
+        .then( (dados) =>{
+            if( !dados ){
+                return res.send(
+                    new errors.BadRequestError('Produto não encontrado'));
+            }
+            res.send( "Produto Atualizado" );
+        }, next) ; 
+});
+
+//metodo del
+servidor.del( '/produtos/:idProd' , (req, res, next) => {
+    const idProduto = req.params.idProd;
+    knex('produtos')
+        .where( 'id' , idProduto)
+        .delete()
+        .then( (dados) =>{
+            if( !dados ){
+                return res.send(
+                    new errors.BadRequestError('Produto não encontrado'));
+            }
+            res.send( "Produto Deletado" );
+        }, next) ; 
+});
+
+//clientes
+//metodo get
 servidor.get('/clientes', (req, res, next) => {
     knex('clientes')
         .select()
@@ -74,7 +118,7 @@ servidor.get('/clientes/:cliente_id', (req, res, next) => {
         })
         .catch(next);
 });
-
+//metodo post
 servidor.post('/clientes', (req, res, next) => {
     
     const { nome, altura, nascimento, cidade_id } = req.body;
@@ -94,15 +138,31 @@ servidor.post('/clientes', (req, res, next) => {
         .catch(next);
 });
 
-servidor.post( '/produtos' , (req, res, next) => {
-    knex('produtos')
-        .insert( req.body )
-        .then( (dados) =>{
-            res.send( dados );
-        }, next) ; 
+//pedidos
+//metodo get
+servidor.get('/pedidos/:pedido_id', (req, res, next) => {
+    const pedido_id = req.params.pedido_id;
+
+    knex('pedidos')
+        .where('id', pedido_id)
+        .first()
+        .then((order) => {
+            if (!order) {
+                return res.send(new errors.BadRequestError('Pedido não encontrado'));
+            }
+
+            
+            knex('pedidos_produtos')
+                .where('pedido_id', pedido_id)
+                .then((orderProducts) => {
+                    order.produtos = orderProducts;
+                    res.send(order);
+                })
+                .catch(next);
+        })
+        .catch(next);
 });
-
-
+//metodo post
 servidor.post('/pedidos', (req, res, next) => {
     
     const { horario, endereco, cliente_id, produtos } = req.body;
@@ -136,57 +196,4 @@ servidor.post('/pedidos', (req, res, next) => {
                 .catch(next);
         })
         .catch(next);
-});
-
-
-servidor.get('/pedidos/:pedido_id', (req, res, next) => {
-    const pedido_id = req.params.pedido_id;
-
-    knex('pedidos')
-        .where('id', pedido_id)
-        .first()
-        .then((order) => {
-            if (!order) {
-                return res.send(new errors.BadRequestError('Pedido não encontrado'));
-            }
-
-            
-            knex('pedidos_produtos')
-                .where('pedido_id', pedido_id)
-                .then((orderProducts) => {
-                    order.produtos = orderProducts;
-                    res.send(order);
-                })
-                .catch(next);
-        })
-        .catch(next);
-});
-
-
-servidor.put( '/produtos/:idProd' , (req, res, next) => {
-    const idProduto = req.params.idProd;
-    knex('produtos')
-        .where( 'id' , idProduto)
-        .update( req.body )
-        .then( (dados) =>{
-            if( !dados ){
-                return res.send(
-                    new errors.BadRequestError('Produto não encontrado'));
-            }
-            res.send( "Produto Atualizado" );
-        }, next) ; 
-});
-
-servidor.del( '/produtos/:idProd' , (req, res, next) => {
-    const idProduto = req.params.idProd;
-    knex('produtos')
-        .where( 'id' , idProduto)
-        .delete()
-        .then( (dados) =>{
-            if( !dados ){
-                return res.send(
-                    new errors.BadRequestError('Produto não encontrado'));
-            }
-            res.send( "Produto Deletado" );
-        }, next) ; 
 });
