@@ -51,6 +51,49 @@ servidor.get( '/produtos/:idProd' , (req, res, next) => {
         }, next) ; 
 });
 
+servidor.get('/clientes', (req, res, next) => {
+    knex('clientes')
+        .select()
+        .then((customers) => {
+            res.send(customers);
+        })
+        .catch(next);
+});
+
+servidor.get('/clientes/:cliente_id', (req, res, next) => {
+    const cliente_id = req.params.cliente_id;
+
+    knex('clientes')
+        .where('id', cliente_id)
+        .first()
+        .then((customer) => {
+            if (!customer) {
+                return res.send(new errors.BadRequestError('Cliente não encontrado'));
+            }
+            res.send(customer);
+        })
+        .catch(next);
+});
+
+servidor.post('/clientes', (req, res, next) => {
+    
+    const { nome, altura, nascimento, cidade_id } = req.body;
+
+   
+    if (!nome || !cidade_id) {
+        return res.send(new errors.BadRequestError('Nome e cidade_id são campos obrigatórios.'));
+    }
+
+    
+    knex('clientes')
+        .insert({ nome, altura, nascimento, cidade_id })
+        .then((customerIds) => {
+            const customerId = customerIds[0];
+            res.send({ message: 'Cliente criado com sucesso', cliente_id: customerId });
+        })
+        .catch(next);
+});
+
 servidor.post( '/produtos' , (req, res, next) => {
     knex('produtos')
         .insert( req.body )
@@ -69,7 +112,7 @@ servidor.post('/pedidos', (req, res, next) => {
         return res.send(new errors.BadRequestError('Campos obrigatórios faltando.'));
     }
 
-   
+    
     knex('pedidos')
         .insert({ horario, endereco, cliente_id })
         .then((orderIds) => {
