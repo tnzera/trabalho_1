@@ -118,6 +118,24 @@ servidor.get('/clientes/:cliente_id', (req, res, next) => {
         })
         .catch(next);
 });
+
+//metodo put
+servidor.put('/clientes/:cliente_id', (req, res, next) => {
+    const cliente_id = req.params.cliente_id;
+    const { nome, altura, nascimento, cidade_id } = req.body;
+
+    knex('clientes')
+        .where('id', cliente_id)
+        .update({ nome, altura, nascimento, cidade_id })
+        .then((updatedRows) => {
+            if (updatedRows === 0) {
+                return res.send(new errors.BadRequestError('Cliente não encontrado'));
+            }
+            res.send({ message: 'Cliente atualizado com sucesso' });
+        })
+        .catch(next);
+});
+
 //metodo post
 servidor.post('/clientes', (req, res, next) => {
     
@@ -134,6 +152,22 @@ servidor.post('/clientes', (req, res, next) => {
         .then((customerIds) => {
             const customerId = customerIds[0];
             res.send({ message: 'Cliente criado com sucesso', cliente_id: customerId });
+        })
+        .catch(next);
+});
+
+//metodo delete
+servidor.del('/clientes/:cliente_id', (req, res, next) => {
+    const cliente_id = req.params.cliente_id;
+
+    knex('clientes')
+        .where('id', cliente_id)
+        .delete()
+        .then((deletedRows) => {
+            if (deletedRows === 0) {
+                return res.send(new errors.BadRequestError('Cliente não encontrado'));
+            }
+            res.send({ message: 'Cliente deletado com sucesso' });
         })
         .catch(next);
 });
